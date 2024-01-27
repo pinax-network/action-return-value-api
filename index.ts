@@ -7,7 +7,7 @@ import { swaggerUI } from '@hono/swagger-ui'
 import { prometheus } from '@hono/prometheus'
 import { openapi } from './src/openapi.js';
 import { decode, get_abi, get_type, read_only } from './src/read_only.js';
-import { Network, rpcs } from './src/config.js';
+import { Network, networks, rpcs } from './src/config.js';
 
 const app = new Hono()
 const { printMetrics, registerMetrics } = prometheus()
@@ -15,6 +15,18 @@ app.use('/*', cors(), logger(), registerMetrics)
 app.get('/metrics', printMetrics);
 app.get('/:contract/:action', handle_request);
 app.post('/:contract/:action', handle_request);
+app.get('/health', health_check);
+
+async function health_check(c: Context) {
+    try {
+        // request get info from all RPCs available
+        const promises = Object.keys(rpcs).map(network => rpcs[network].v1.chain.get_info());
+        await Promise.all(promises);
+        return c.text('OK')
+    } catch (e) {
+        return c.text(e.message, 500);
+    }
+}
 
 async function handle_request(c: Context) {
     const data = await get_data(c);
@@ -53,7 +65,7 @@ function get_network(c: Context): Network {
     let network = c.req.raw.headers.get('x-network') as Network;
     if ( !network ) network = searchParams.get('network') as Network;
     if ( !network ) network = 'mainnet';
-    if ( !["mainnet","testnet"].includes(network)) throw 'network must be mainnet or testnet';
+    if ( !networks.includes(network)) throw `network must be ${networks.join(' or ')}`;
     return network;
 }
 
@@ -72,12 +84,11 @@ async function get_decoded_read_only(contract: string, action: string, data: any
     // console.log("handle_response", {contract, action, data, network});
     if ( !action ) throw 'action is required';
     if ( !contract ) throw 'contract is required';
-    if ( !["mainnet","testnet"].includes(network)) throw 'network must be mainnet or testnet';
     const rpc = rpcs[network];
     const abi = await get_abi(rpc, contract);
     const value = await read_only(abi, rpc, contract, action, data);
     const return_value_hex_data = value.processed.action_traces[0].return_value_hex_data;
-    let type = 'string';
+    let type = 'string'; // fallback in case no action return value struct in ABI
     try {
         type = get_type(abi, action);
     } catch (e) {

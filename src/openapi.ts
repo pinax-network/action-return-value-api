@@ -3,6 +3,7 @@ import { OpenApiBuilder, ParameterLocation, ParameterObject } from "openapi3-ts/
 
 const TAGS = {
     USAGE: "Usage",
+    HEALTH: "Health",
     DOCS: "Documentation",
 } as const;
 
@@ -82,6 +83,20 @@ export async function openapi() {
             description: "Action Return Value"
           },
         },
+      },
+    })
+    .addPath("/health", {
+      get: {
+        tags: [TAGS.HEALTH],
+        summary: "Performs health checks",
+        responses: { 200:  { description: "Health check" } },
+      },
+    })
+    .addPath("/metrics", {
+      get: {
+        tags: [TAGS.HEALTH],
+        summary: "Prometheus metrics",
+        responses: { 200: { description: "Prometheus metrics" } },
       },
     })
     .addPath("/openapi", {
