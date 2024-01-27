@@ -4,12 +4,15 @@ import { Context, Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { swaggerUI } from '@hono/swagger-ui'
+import { prometheus } from '@hono/prometheus'
 import { openapi } from './src/openapi.js';
 import { decode, get_abi, get_type, read_only } from './src/read_only.js';
 import { Network, rpcs } from './src/config.js';
 
 const app = new Hono()
-app.use('/*', cors(), logger())
+const { printMetrics, registerMetrics } = prometheus()
+app.use('/*', cors(), logger(), registerMetrics)
+app.get('/metrics', printMetrics);
 app.get('/:contract/:action', handle_request);
 app.post('/:contract/:action', handle_request);
 
@@ -84,8 +87,6 @@ async function get_decoded_read_only(contract: string, action: string, data: any
 }
 
 app.get('/', swaggerUI({ url: '/openapi' }))
-app.get('/openapi', async (c) => {
-    return c.json(JSON.parse(await openapi()));
-})
+app.get('/openapi', async (c) => c.json(JSON.parse(await openapi())))
 
 export default app

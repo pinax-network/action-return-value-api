@@ -12,6 +12,7 @@
 		"test": "bun test"
 	},
 	"dependencies": {
+		"@hono/prometheus": "latest",
 		"@hono/swagger-ui": "latest",
 		"@wharfkit/session": "latest",
 		"hono": "latest",
