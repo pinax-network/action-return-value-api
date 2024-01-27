@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"name": "action-return-value-api",
 	"description": "Action Return Value API",
-	"homepage": "https://github.com/pinax-network/action-return-value-api",
+	"homepage": "https://developers.eos.io/manuals/eosio.cdt/v1.8/how-to-guides/how-to-return-values-from-actions",
 	"type": "module",
 	"license": "MIT",
 	"scripts": {
@@ -13,7 +13,6 @@
 	},
 	"dependencies": {
 		"@hono/prometheus": "latest",
-		"@hono/swagger-ui": "latest",
 		"@wharfkit/session": "latest",
 		"hono": "latest",
 		"openapi3-ts": "latest"

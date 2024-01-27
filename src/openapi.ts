@@ -37,9 +37,9 @@ function network(location: ParameterLocation = "query", name = "network"): Param
 export async function openapi() {
   return new OpenApiBuilder()
     .addInfo({
-      title: pkg.name,
+      title: pkg.description,
       version: pkg.version,
-      description: pkg.description
+      description: "Action return values are only available to clients sending the action via the RPC API."
     })
     .addExternalDocs({ url: pkg.homepage, description: "Extra documentation" })
     .addPath("/{contract}/{action}", {

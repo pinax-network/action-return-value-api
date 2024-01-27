@@ -5,6 +5,7 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { swaggerUI } from '@hono/swagger-ui'
 import { prometheus } from '@hono/prometheus'
+import { serveStatic } from 'hono/bun'
 import { openapi } from './src/openapi.js';
 import { decode, get_abi, get_type, read_only } from './src/read_only.js';
 import { Network, networks, rpcs } from './src/config.js';
@@ -97,7 +98,8 @@ async function get_decoded_read_only(contract: string, action: string, data: any
     return decode(abi, return_value_hex_data, type)
 }
 
-app.get('/', swaggerUI({ url: '/openapi' }))
 app.get('/openapi', async (c) => c.json(JSON.parse(await openapi())))
+app.use('/favicon.png', serveStatic({ path: './swagger/favicon.png' }))
+app.use('/', serveStatic({ path: './swagger/index.html' }))
 
 export default app
