@@ -1,4 +1,4 @@
-# EOS Readonly fetch API
+# `Action Return Value` API
 
 ## Quickstart
 
@@ -15,4 +15,10 @@ $ npm run dev
 | sj5wyvn1azme | json |
 | t53ryjs2mw1d | text |
 | sk3bjrendfhx | html |
-| n1c344mpfpbe | user-specified |
+| n1c344mpfpbe | image/png |
+
+## Tests
+
+```bash
+$ npm test
+```

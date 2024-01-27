@@ -73,7 +73,7 @@ export async function openapi() {
           content: {
             "application/json": {
               schema: { type: "string" },
-              example: `{"message":"hello world"}`,
+              example: '{"message":"hello world"}',
             }
           },
         },

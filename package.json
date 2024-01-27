@@ -2,7 +2,7 @@
 	"private": true,
 	"version": "0.1.0",
 	"name": "action-return-value-api",
-	"description": "Antelope Action Return Value API",
+	"description": "Action Return Value API",
 	"homepage": "https://github.com/pinax-network/action-return-value-api",
 	"type": "module",
 	"license": "MIT",
@@ -12,12 +12,12 @@
 		"test": "bun test"
 	},
 	"dependencies": {
+		"@hono/swagger-ui": "latest",
 		"@wharfkit/session": "latest",
 		"hono": "latest",
 		"openapi3-ts": "latest"
 	},
 	"devDependencies": {
-		"bun-types": "latest",
-		"typescript": "latest"
+		"bun-types": "latest"
 	}
 }

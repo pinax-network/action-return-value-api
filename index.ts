@@ -1,77 +1,75 @@
 #!/usr/bin/env node
 
+import { Context, Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
-import { Hono } from 'hono'
-import swaggerHtml from "./swagger/index.html";
-import swaggerFavicon from "./swagger/favicon.png";
+import { swaggerUI } from '@hono/swagger-ui'
 import { openapi } from './src/openapi.js';
-import { decode, get_abi, get_type, read_only } from './src/utils.js';
-import { rpcs } from './src/config.js';
+import { decode, get_abi, get_type, read_only } from './src/read_only.js';
+import { Network, rpcs } from './src/config.js';
 
 const app = new Hono()
 app.use('/*', cors(), logger())
+app.get('/:contract/:action', handle_request);
+app.post('/:contract/:action', handle_request);
 
-app.get('/:contract/:action', async (c) => {
+async function handle_request(c: Context) {
+    const data = await get_data(c);
+    const network = get_network(c);
+    const contract = c.req.param("contract");
+    const action = c.req.param("action");
+    try {
+        const decoded = await get_decoded_read_only(contract, action, data, network);
+        return handle_response(c, decoded);
+    } catch (e: any) {
+        return c.json({error: e.message});
+    }
+}
+
+async function get_data(c: Context) {
+    let data = '{}' // default to empty object
+    if (c.req.method === "POST" ) {
+        try {
+            data = await c.req.json();
+        } catch (e) {
+            // ignore
+        }
+    } else {
+        const {searchParams} = new URL(c.req.url)
+        data = searchParams.get('data') ?? '{}'; // optional JSON encoded data
+    }
+    try {
+        return JSON.parse(data);
+    } catch (e) {
+        return data;
+    }
+}
+
+function get_network(c: Context): Network {
     const {searchParams} = new URL(c.req.url)
-    let data = searchParams.get('data') ?? ''; // optional JSON encoded data
-    const network = searchParams.get('network') ?? 'mainnet';
-    try {
-        data = JSON.parse(data);
-    } catch (e) {
-        // ignore
-    }
-    const contract = c.req.param("contract");
-    const action = c.req.param("action");
+    let network = c.req.raw.headers.get('x-network') as Network;
+    if ( !network ) network = searchParams.get('network') as Network;
+    if ( !network ) network = 'mainnet';
+    if ( !["mainnet","testnet"].includes(network)) throw 'network must be mainnet or testnet';
+    return network;
+}
 
-    if ( !["mainnet","testnet"].includes(network)) return c.json({error: 'network must be mainnet or testnet'});
-    if ( !action ) return c.json({error: 'action is required'});
-    if ( !contract ) return c.json({error: 'contract is required'});
-    try {
-        const response = await handle_response(contract, action, data, network);
-        if ( typeof response === 'object' ) return c.json(response);
-        if ( typeof response === "string" && response.startsWith('<!doctype') ) return c.html(response);
-        if ( typeof response === "string" && response.startsWith('data:') ) {
-            const blob = await fetch(response).then(res => res.blob())
-            c.header('Content-Type', blob.type);
-            return c.body(blob.stream());
-        }
-        return c.text(response);
-    } catch (e) {
-        return c.json({error: e.message});
+async function handle_response(c: Context, decoded: any) {
+    if ( typeof decoded === 'object' ) return c.json(decoded);
+    if ( typeof decoded === "string" && decoded.startsWith('<!doctype') ) return c.html(decoded);
+    if ( typeof decoded === "string" && decoded.startsWith('data:') ) {
+        const blob = await fetch(decoded).then(res => res.blob())
+        c.header('Content-Type', blob.type);
+        return c.body(blob.stream());
     }
-})
+    return c.text(decoded);
+}
 
-app.post('/:contract/:action', async (c) => {
-    // const data = c.body; // optional JSON encoded data
-    let data = await c.req.text();
-    try {
-        data = JSON.parse(data);
-    } catch (e) {
-        // ignore
-    }
-    const contract = c.req.param("contract");
-    const action = c.req.param("action");
-    const network = c.req.raw.headers.get('x-network') ?? "mainnet";
-    if ( !["mainnet","testnet"].includes(network)) return c.json({error: 'network must be mainnet or testnet'});
-    if ( !action ) return c.json({error: 'action is required'});
-    if ( !contract ) return c.json({error: 'contract is required'});
-    try {
-        const response = await handle_response(contract, action, data, network);
-        if ( typeof response === 'object' ) return c.json(response);
-        if ( typeof response === "string" && response.startsWith('<!doctype') ) return c.html(response);
-        if ( typeof response === "string" && response.startsWith('data:') ) {
-            const blob = await fetch(response).then(res => res.blob())
-            c.header('Content-Type', blob.type);
-            return c.body(blob.stream());
-        }
-        return c.text(response);
-    } catch (e) {
-        return c.json({error: e.message});
-    }
-})
-
-async function handle_response(contract: string, action: string, data: any, network: string) {
+async function get_decoded_read_only(contract: string, action: string, data: any, network: Network) {
+    // console.log("handle_response", {contract, action, data, network});
+    if ( !action ) throw 'action is required';
+    if ( !contract ) throw 'contract is required';
+    if ( !["mainnet","testnet"].includes(network)) throw 'network must be mainnet or testnet';
     const rpc = rpcs[network];
     const abi = await get_abi(rpc, contract);
     const value = await read_only(abi, rpc, contract, action, data);
@@ -85,14 +83,7 @@ async function handle_response(contract: string, action: string, data: any, netw
     return decode(abi, return_value_hex_data, type)
 }
 
-app.get('/', async (c) => {
-    return new Response(Bun.file(swaggerHtml));
-})
-
-app.get('/favicon.png', async () => {
-    return new Response(Bun.file(swaggerFavicon));
-})
-
+app.get('/', swaggerUI({ url: '/openapi' }))
 app.get('/openapi', async (c) => {
     return c.json(JSON.parse(await openapi()));
 })
