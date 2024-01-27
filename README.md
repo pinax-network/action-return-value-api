@@ -9,13 +9,13 @@ $ npm run dev
 
 ## Test Contracts
 
-| contract | type |
-| -------- | ---- |
-| actions.eosn | json |
-| sj5wyvn1azme | json |
-| t53ryjs2mw1d | text |
-| sk3bjrendfhx | html |
-| n1c344mpfpbe | image/png |
+| contract     | mimetype  | network |
+| ------------ | --------- | --------|
+| actions.eosn | text/json | mainnet |
+| sj5wyvn1azme | json      | testnet |
+| t53ryjs2mw1d | text      | testnet |
+| sk3bjrendfhx | html      | testnet |
+| n1c344mpfpbe | image/png | testnet |
 
 ## Tests
 
