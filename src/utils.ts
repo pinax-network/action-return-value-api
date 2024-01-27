@@ -13,8 +13,7 @@ export function get_type( abi: ABI.Def, action: string ) {
     throw new Error(`[action=${action}] has no action return value`);
 }
 
-export function decode(abi: ABI.Def, return_value_hex_data: string, action: string) {
-    const type: any = get_type(abi, action);
+export function decode(abi: ABI.Def, return_value_hex_data: string, type: any ) {
     const decoded = Serializer.decode({data: return_value_hex_data, type, abi});
     if ( decoded.toJSON ) return decoded.toJSON();
     if ( typeof decoded === "string" ) return decoded;

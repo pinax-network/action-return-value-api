@@ -6,7 +6,7 @@ import { Hono } from 'hono'
 import swaggerHtml from "./swagger/index.html";
 import swaggerFavicon from "./swagger/favicon.png";
 import { openapi } from './src/openapi.js';
-import { decode, get_abi, read_only } from './src/utils.js';
+import { decode, get_abi, get_type, read_only } from './src/utils.js';
 import { rpcs } from './src/config.js';
 
 const app = new Hono()
@@ -30,6 +30,12 @@ app.get('/:contract/:action', async (c) => {
     try {
         const response = await handle_response(contract, action, data, network);
         if ( typeof response === 'object' ) return c.json(response);
+        if ( typeof response === "string" && response.startsWith('<!doctype') ) return c.html(response);
+        if ( typeof response === "string" && response.startsWith('data:') ) {
+            const blob = await fetch(response).then(res => res.blob())
+            c.header('Content-Type', blob.type);
+            return c.body(blob.stream());
+        }
         return c.text(response);
     } catch (e) {
         return c.json({error: e.message});
@@ -53,6 +59,12 @@ app.post('/:contract/:action', async (c) => {
     try {
         const response = await handle_response(contract, action, data, network);
         if ( typeof response === 'object' ) return c.json(response);
+        if ( typeof response === "string" && response.startsWith('<!doctype') ) return c.html(response);
+        if ( typeof response === "string" && response.startsWith('data:') ) {
+            const blob = await fetch(response).then(res => res.blob())
+            c.header('Content-Type', blob.type);
+            return c.body(blob.stream());
+        }
         return c.text(response);
     } catch (e) {
         return c.json({error: e.message});
@@ -64,7 +76,13 @@ async function handle_response(contract: string, action: string, data: any, netw
     const abi = await get_abi(rpc, contract);
     const value = await read_only(abi, rpc, contract, action, data);
     const return_value_hex_data = value.processed.action_traces[0].return_value_hex_data;
-    return decode(abi, return_value_hex_data, action)
+    let type = 'string';
+    try {
+        type = get_type(abi, action);
+    } catch (e) {
+        // ignore
+    }
+    return decode(abi, return_value_hex_data, type)
 }
 
 app.get('/', async (c) => {

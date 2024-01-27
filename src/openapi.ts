@@ -59,7 +59,6 @@ export async function openapi() {
         responses: {
           200: {
             description: "Action Return Value",
-            content: {"application/json": {}},
           },
         },
       },
@@ -80,8 +79,7 @@ export async function openapi() {
         },
         responses: {
           200: {
-            description: "Action Return Value",
-            content: {"application/json": {}},
+            description: "Action Return Value"
           },
         },
       },
