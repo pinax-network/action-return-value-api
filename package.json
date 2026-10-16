@@ -12,12 +12,22 @@
 		"test": "bun test"
 	},
 	"dependencies": {
-		"@hono/prometheus": "latest",
-		"@wharfkit/session": "latest",
-		"hono": "latest",
-		"openapi3-ts": "latest"
+		"@hono/prometheus": "1.0.0",
+		"@wharfkit/session": "1.2.7",
+		"hono": "3.12.7",
+		"openapi3-ts": "4.2.1"
 	},
 	"devDependencies": {
-		"bun-types": "latest"
+		"bun-types": "1.0.25"
+	},
+	"packageManager": "bun@1.4.3",
+	"engines": {
+		"bun": ">=1.4.3"
+	},
+	"devEngines": {
+		"packageManager": {
+			"name": "bun",
+			"onFail": "error"
+		}
 	}
 }
