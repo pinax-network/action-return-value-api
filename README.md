@@ -3,8 +3,8 @@
 ## Quickstart
 
 ```bash
-$ npm install
-$ npm run dev
+$ bun install
+$ bun run dev
 ```
 
 ## Test Contracts
@@ -20,5 +20,5 @@ $ npm run dev
 ## Tests
 
 ```bash
-$ npm test
+$ bun run test
 ```
